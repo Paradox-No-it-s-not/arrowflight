@@ -1,7 +1,9 @@
-# Version 3
+# Version 4: Verbesserte Plot-Anzeige und benutzerfreundliches Beenden
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
+from matplotlib.gridspec import GridSpec
+import msvcrt
 import sys
 
 # --- Konstanten ---
@@ -25,7 +27,7 @@ m=mgrains * grainsTokg  # Masse in kg
 
 ## Startbedingungen
 v0fps = 230  # Anfangsgeschwindigkeit in fps
-v0 = 230 * fpsToms  # Anfangsgeschwindigkeit in m/s     
+v0 = v0fps * fpsToms  # Anfangsgeschwindigkeit in m/s     
 
 # --- Zielentfernung ---
 try:
@@ -150,47 +152,87 @@ print(value_line)
 
 if len(sys.argv) > 3 and sys.argv[3] == "NO_PLOT":
     sys.exit(0)
-# --- Plot ---
-plt.figure(figsize=(10,6))
+# --- Plot: beide Figuren nebeneinander mittels GridSpec ---
+fig = plt.figure(figsize=(12,6))
+gs = GridSpec(2, 3, figure=fig)
 
-plt.subplot(2,1,1)
-plt.plot(xs, v_total, color="tab:blue")
-plt.ylabel("Geschwindigkeit [m/s]")
-plt.title("Recurve-Pfeil – Optimierter Flug (70 m Zielweite)")
-plt.grid(True)
+# Links: zwei gestapelte Subplots (oben: Flugbahn, unten: Geschwindigkeit)
+ax1 = fig.add_subplot(gs[0, 0:2])
+ax2 = fig.add_subplot(gs[1, 0:2])
 
-plt.subplot(2,1,2)
-plt.plot(xs, ys, color="tab:green")
-plt.xlabel("Horizontale Entfernung [m]")
-plt.ylabel("Höhe [m]")
-plt.grid(True)
+# Rechts: eine Spalte, die sich über beide Zeilen erstreckt (Kreise)
+ax3 = fig.add_subplot(gs[0, 2])
 
-# Additional plot: some circles around origin , soll ne Zielscheibe darstellen
-plt.tight_layout()  # layout for first figure
+# Oben: Flugbahn / Trajektorie
+ax1.plot(xs, ys, color="tab:green")
+ax1.set_xlabel("Horizontale Entfernung [m]")
+ax1.set_ylabel("Höhe [m]")
+ax1.set_title(f"Recurve-Pfeil – Optimierter Flug ({target_x:.2f}m Zielweite)")
+ax1.grid(True)
 
-# Erstelle zweite Figur mit den Kreisen und dem zusätzlichen Punkt bei (0, zielhoehe_rel)
-fig2, ax2 = plt.subplots(figsize=(6,6))
+# Unten: Geschwindigkeit über der Zeit bzw. Entfernung
+ax2.plot(xs, v_total, color="tab:blue")
+ax2.set_ylabel("Geschwindigkeit [m/s]")
+ax2.grid(True)
+
+# Kreise / Zielscheibe auf der rechten Achse
 circle_black = Circle((0, 0), 0.4, fill=False, edgecolor='black', linewidth=2)  # D=0.8 -> r=0.4
 circle_blue = Circle((0, 0), 0.3, fill=False, edgecolor='tab:blue', linewidth=2) # D=0.6 -> r=0.3
 circle_red = Circle((0, 0), 0.2, fill=False, edgecolor='red', linewidth=2)  # D=0.4 -> r=0.2
 circcle_gold = Circle((0, 0), 0.1, fill=False, edgecolor='gold', linewidth=2) # D=0.2 -> r=0.1  
-ax2.add_patch(circle_black)
-ax2.add_patch(circle_blue)
-ax2.add_patch(circle_red)
-ax2.add_patch(circcle_gold)
-ax2.plot(0, 0, 'ko', label='Nullpunkt')  # Nullpunkt markieren
+ax3.add_patch(circle_black)
+ax3.add_patch(circle_blue)
+ax3.add_patch(circle_red)
+ax3.add_patch(circcle_gold)
+ax3.plot(0, 0, 'ko')  # Nullpunkt markieren (Handle wird unten für Legendensortierung verwendet)
 
 # Zusätzlicher Punkt bei x=0, y=zielhoehe_rel
-ax2.plot(0, zielhoehe_rel, marker='o', color='tab:green', markersize=8, label=f'zielhoehe_rel={zielhoehe_rel:.3f} m')
+ax3.plot(0, zielhoehe_rel, marker='o', color='tab:green', markersize=8)
 
-ax2.set_aspect('equal', 'box')
+ax3.set_aspect('equal', 'box')
 lim = max(0.4, abs(zielhoehe_rel) + 0.1)  # garantiert, dass der Punkt sichtbar ist
-ax2.set_xlim(-lim, lim)
-ax2.set_ylim(-lim, lim)
-ax2.set_xlabel("X [m]")
-ax2.set_ylabel("Y [m]")
-ax2.set_title("Kreise um den Nullpunkt (D=0.8 m)")
-ax2.grid(True)
-ax2.legend()
+ax3.set_xlim(-lim, lim)
+ax3.set_ylim(-lim, lim)
+ax3.set_xlabel("X [m]")
+ax3.set_ylabel("Y [m]")
+ax3.set_title("Kreise um den Nullpunkt (D=0.8 m)")
+ax3.grid(True)
 
-plt.show()
+# Positioniere die Achsenbeschriftungen unten links im Plot
+#ax3.xaxis.set_label_coords(0.01, -0.06)
+#ax3.yaxis.set_label_coords(-0.08, 0.01)
+
+# Beschriftung direkt rechts neben dem grünen Punkt (Zielhöhe)
+ax3.annotate(
+    f"Zielhöhe: {zielhoehe_rel:.3f} m",
+    xy=(0, zielhoehe_rel),
+    xytext=(8, 0),
+    textcoords='offset points',
+    va='center',
+    ha='left',
+    fontsize=9,
+    bbox=dict(boxstyle='round,pad=0.2', fc='white', alpha=0.7)
+)
+
+plt.tight_layout()
+
+# Zeige die Plots nicht-blockierend und warte auf einen Tastendruck im Terminal,
+# damit das Programm erst durch Tastendruck beendet wird (nicht durch Schließen der Fenster).
+try:
+    plt.show(block=False)
+except TypeError:
+    # Fallback: einige ältere Backends kennen block-Keyword nicht
+    plt.show()
+
+print("Drücke eine Taste im Terminal, um das Programm zu beenden...")
+
+# Warte auf Tastendruck und verarbeite GUI-Events zwischendurch
+while True:
+    if msvcrt.kbhit():
+        # Taste einlesen und Schleife beenden
+        msvcrt.getch()
+        break
+    # kurze Pause um GUI-Events zu verarbeiten
+    plt.pause(0.1)
+
+plt.close('all')
