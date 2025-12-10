@@ -15,6 +15,7 @@ rho = 1.2
 g = 9.81
 
 
+
 # --- Parameter des Pfeils ---
 mgrains = 235  # Masse in grain
 d = 0.00542        # Durchmesser [m]
@@ -34,10 +35,9 @@ try:
     target_x = float(sys.argv[1])  # in m
     target_y = float(sys.argv[2])  # in m
 except (IndexError, ValueError):
-    #print("Verwendung: flug-3.py <target_x[m]> <target_y[m]>")
-    print("Verwendung: flug-3.py <target_x[m]> <target_y[m]> [NO_PLOT]")
+    #print("Verwendung: flug.py <target_x[m]> <target_y[m]>")
+    print("Verwendung: flug.py <target_x[m]> <target_y[m]> [NO_PLOT] [NO_HEADER]")
     sys.exit(1)
-
 
 
 # --- Numerische Parameter ---
@@ -147,10 +147,11 @@ widths = [max(len(h), len(v)) for h, v in zip(headers, values)]
 header_line = "  ".join(h.center(w) for h, w in zip(headers, widths))
 value_line = "  ".join(v.rjust(w) for v, w in zip(values, widths))
 
-print(header_line)
+if "NO_HEADER" not in sys.argv[3:]:
+    print(header_line)
 print(value_line)
 
-if len(sys.argv) > 3 and sys.argv[3] == "NO_PLOT":
+if "NO_PLOT" in sys.argv[3:]:
     sys.exit(0)
 # --- Plot: beide Figuren nebeneinander mittels GridSpec ---
 fig = plt.figure(figsize=(12,6))
