@@ -13,13 +13,13 @@ Small simulator that computes an optimal launch angle for an arrow and visualize
 
 ## Requirements
 - Python 3.8+ (or any modern Python 3)
-- `numpy` and `matplotlib`
+- `numpy`, `matplotlib`, and `readchar`
 
 Install on Windows PowerShell:
 
 ```powershell
 python -m pip install --upgrade pip
-python -m pip install numpy matplotlib
+python -m pip install numpy matplotlib readchar
 ```
 
 ## Usage
@@ -62,4 +62,19 @@ By default the script prints a header row followed by a values row containing:
 
 If `NO_HEADER` is used, only the values row is printed. If `NO_PLOT` is used the script will exit after printing (no GUI windows are created).
 
-## Notes & Next steps
+## Notes
+
+Internal comments and docstrings in `source/flight.py` have been translated from German to English.
+
+Recent implementation details:
+
+- The main script was renamed from `flug.py` to `flight.py`.
+- Several variables were renamed to clear English snake_case names.
+- The script now uses the cross-platform `readchar` library together with a small background thread to detect a terminal keypress without blocking the Matplotlib GUI. This works on Windows, macOS and Linux terminals.
+
+Notes about keypress behavior:
+
+- The POSIX implementation reads from `stdin` and therefore works when the script is run in a real terminal. Some IDE consoles or output capture environments may not behave the same way.
+- The `readchar` approach reads one keypress in a blocking call inside a background thread; the main thread keeps the Matplotlib event loop alive with `plt.pause()` until a key is received.
+
+

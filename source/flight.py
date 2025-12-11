@@ -3,7 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 from matplotlib.gridspec import GridSpec
-import msvcrt
+import threading
+import readchar
 import sys
 
 # --- Constants ---
@@ -28,7 +29,7 @@ m = mass_grains * grains_to_kg  # mass in kg
 
 ## Initial conditions
 v0_fps = 230  # initial speed in fps
-v0_ms = v0_fps * fps_to_ms  # initial speed in m/s     
+v0 = v0_fps * fps_to_ms  # initial speed in m/s     
 
 # --- Target distance ---
 try:
@@ -44,8 +45,8 @@ dt = 0.001       # time step [s]
 
 def simulate_flight(theta):
     """Simulates the flight and returns (hit_distance, flight_time, end_speed, impact_angle)"""
-    vx = v0_ms * np.cos(theta)
-    vy = v0_ms * np.sin(theta)
+    vx = v0 * np.cos(theta)
+    vy = v0 * np.sin(theta)
     x, y, t = 0.0, 0.0, 0.0
 
     #while  x <= target_x * 1.5:  # safety buffer
@@ -87,8 +88,8 @@ for _ in range(25):  # 25 iterations ≈ very accurate
 
 # --- Final simulation with optimal angle ---
 xs, ys, vxs, vys, ts = [], [], [], [], []
-vx = v0_ms * np.cos(best_theta)
-vy = v0_ms * np.sin(best_theta)
+vx = v0 * np.cos(best_theta)
+vy = v0 * np.sin(best_theta)
 x, y, t = 0.0, 0.0, 0.0
 #x, y, t = 0.0, target_y, 0.0
 
@@ -228,13 +229,20 @@ except TypeError:
 
 print("Press any key in the terminal to exit the program...")
 
-# Wait for keypress and process GUI events in the meantime
-while True:
-    if msvcrt.kbhit():
-        # read key and exit loop
-        msvcrt.getch()
-        break
-    # short pause to process GUI events
+# Use a background thread that blocks on `readchar.readkey()`; main thread keeps GUI alive
+key_pressed = threading.Event()
+
+def _wait_for_key():
+    try:
+        readchar.readkey()
+    except Exception:
+        # ignore any read errors
+        pass
+    key_pressed.set()
+
+threading.Thread(target=_wait_for_key, daemon=True).start()
+
+while not key_pressed.is_set():
     plt.pause(0.1)
 
 plt.close('all')

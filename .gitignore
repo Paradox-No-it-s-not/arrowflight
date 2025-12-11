@@ -1,2 +1,4 @@
 *.cmd
 Arrowflight.code-workspace
+**.__pycache__/
+**.pyc
