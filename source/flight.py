@@ -35,7 +35,7 @@ try:
     target_x = float(sys.argv[1])  # in m
     target_y = float(sys.argv[2])  # in m
 except (IndexError, ValueError):
-    print("Usage: flug.py <target_x[m]> <target_y[m]> [NO_PLOT] [NO_HEADER]")
+    print("Usage: flight.py <target_x[m]> <target_y[m]> [NO_PLOT] [NO_HEADER]")
     sys.exit(1)
 
 
