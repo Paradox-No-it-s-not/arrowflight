@@ -24,36 +24,53 @@ python -m pip install numpy matplotlib readchar
 
 ## Usage
 ```
-python .\source\flight.py <target_x[m]> <target_y[m]> [NO_PLOT] [NO_HEADER]
+python .\source\flight.py <target_x[m]> <target_y[m]> [profile] [--config-file PATH] [--no-plot] [--no-header]
 ```
 - `target_x` — horizontal target distance in meters (float)
 - `target_y` — target height in meters (float)
-- `NO_PLOT` — optional flag; if present, the script does not open matplotlib windows
-- `NO_HEADER` — optional flag; if present, the script prints only the values line (no column header)
+- `profile` — optional named arrow profile from the config (default: `default`)
+- `--config-file PATH` — optional path to a JSON config file containing named profiles (default: `source/arrows.json`)
+- `--no-plot` — optional flag; if present, the script does not open matplotlib windows
+- `--no-header` — optional flag; if present, the script prints only the values line (no column header)
 
 Notes:
-- Distances are in meters; internal velocities are in m/s (script uses a default arrow speed in fps converted to m/s).
-- When plots are enabled the program opens a non-blocking Matplotlib window and then waits for a keypress in the terminal before exiting.
+- Distances are in meters; internal velocities are in m/s (script converts fps to m/s using the profile value).
+- When plots are enabled the program opens a non-blocking Matplotlib window and waits for a keypress in the terminal before exiting.
+
+## Configuration
+
+The script reads named arrow profiles from a JSON file. A sample config is included at [source/arrows.json](source/arrows.json#L1).
+Each profile is a JSON object with keys such as `mass_grains`, `diameter_m`, `cw`, and `v0_fps`.
+
+Example `arrows.json` (excerpt):
+```json
+{
+	"default": { "mass_grains": 235, "diameter_m": 0.00542, "cw": 0.25, "v0_fps": 230 },
+	"light":   { "mass_grains": 180, "diameter_m": 0.00500, "cw": 0.24, "v0_fps": 245 }
+}
+```
+
+Use the `profile` positional argument to select one of the named profiles. Override the config file location with `--config-file` if needed.
 
 ## Examples (PowerShell)
-- Run with a 50 m target at ground level (show plots and header):
+- Run for a 50 m target at ground level with the `default` profile (show plots and header):
 ```powershell
-python .\source\flight.py 50 0
+python .\source\flight.py 50 0 default
 ```
 
-- Run for a 30 m target 1.5 m high, suppress plots but keep header:
+- Run for a 30 m target 1.5 m high using the `light` profile, suppress plots:
 ```powershell
-python .\source\flight.py 30 1.5 NO_PLOT
+python .\source\flight.py 30 1.5 light --no-plot
 ```
 
-- Run and suppress the header line (useful for scripting/CSV-like output):
+- Run with a custom config file and `heavy` profile:
 ```powershell
-python .\source\flight.py 25 0 NO_HEADER
+python .\source\flight.py 30 1.5 heavy --config-file C:\path\to\my_arrows.json
 ```
 
-- Run with both flags (no plot, no header — only values line printed):
+- Run without header (useful for scripting):
 ```powershell
-python .\source\flight.py 25 0 NO_PLOT NO_HEADER
+python .\source\flight.py 25 0 default --no-header
 ```
 
 ## Output

@@ -1,0 +1,20 @@
+{
+  "default": {
+    "mass_grains": 235,
+    "diameter_m": 0.00542,
+    "cw": 0.25,
+    "v0_fps": 230
+  },
+  "light": {
+    "mass_grains": 180,
+    "diameter_m": 0.005,
+    "cw": 0.24,
+    "v0_fps": 245
+  },
+  "heavy": {
+    "mass_grains": 350,
+    "diameter_m": 0.0058,
+    "cw": 0.26,
+    "v0_fps": 190
+  }
+}

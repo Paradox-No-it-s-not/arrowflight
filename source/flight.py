@@ -6,6 +6,9 @@ from matplotlib.gridspec import GridSpec
 import threading
 import readchar
 import sys
+import argparse
+import json
+from pathlib import Path
 
 # --- Constants ---
 # Conversion: grains to kg
@@ -17,27 +20,49 @@ g = 9.81
 
 
 
-# --- Arrow parameters ---
-mass_grains = 235  # mass in grains
-diameter_m = 0.00542        # diameter [m]
-# Cross-sectional area
-a = np.pi * (diameter_m/2)**2
-# 0.25 is a commonly assumed drag coefficient value for arrows
-cw = 0.25
+# --- Arrow parameters will be loaded from a configuration file (JSON).
+# CLI: flight.py <target_x> <target_y> [profile] [--config-file PATH] [--no-plot] [--no-header]
+parser = argparse.ArgumentParser(description="Compute optimal arrow launch angle using named profiles from a config file.")
+parser.add_argument('target_x', type=float, help='Target horizontal distance in meters')
+parser.add_argument('target_y', type=float, help='Target height in meters')
+parser.add_argument('profile', nargs='?', default='default', help='Named profile from the config file (default: "default")')
+parser.add_argument('--config-file', '-c', default=str(Path(__file__).with_name('arrows.json')), help='Path to JSON config with named profiles')
+parser.add_argument('--no-plot', action='store_true', help='Do not show plots')
+parser.add_argument('--no-header', action='store_true', help='Do not print the header table')
 
-m = mass_grains * grains_to_kg  # mass in kg
+args = parser.parse_args()
 
-## Initial conditions
-v0_fps = 230  # initial speed in fps
-v0 = v0_fps * fps_to_ms  # initial speed in m/s     
+target_x = args.target_x
+target_y = args.target_y
 
-# --- Target distance ---
-try:
-    target_x = float(sys.argv[1])  # in m
-    target_y = float(sys.argv[2])  # in m
-except (IndexError, ValueError):
-    print("Usage: flight.py <target_x[m]> <target_y[m]> [NO_PLOT] [NO_HEADER]")
+config_path = Path(args.config_file)
+if not config_path.exists():
+    print(f"Config file not found: {config_path}")
     sys.exit(1)
+
+try:
+    with open(config_path, 'r', encoding='utf-8') as f:
+        configs = json.load(f)
+except Exception as e:
+    print(f"Failed to read config file: {e}")
+    sys.exit(1)
+
+if args.profile not in configs:
+    print(f"Profile '{args.profile}' not found in config. Available profiles: {', '.join(sorted(configs.keys()))}")
+    sys.exit(1)
+
+profile = configs[args.profile]
+
+# Read profile parameters with sensible defaults
+mass_grains = profile.get('mass_grains', 235)
+diameter_m = profile.get('diameter_m', 0.00542)
+cw = profile.get('cw', 0.25)
+v0_fps = profile.get('v0_fps', 230)
+
+# Cross-sectional area and conversions
+a = np.pi * (diameter_m/2)**2
+m = mass_grains * grains_to_kg
+v0 = v0_fps * fps_to_ms
 
 
 # --- Numerical parameters ---
@@ -149,11 +174,11 @@ widths = [max(len(h), len(v)) for h, v in zip(headers, values)]
 header_line = "  ".join(h.center(w) for h, w in zip(headers, widths))
 value_line = "  ".join(v.rjust(w) for v, w in zip(values, widths))
 
-if "NO_HEADER" not in sys.argv[3:]:
+if not args.no_header:
     print(header_line)
 print(value_line)
 
-if "NO_PLOT" in sys.argv[3:]:
+if args.no_plot:
     sys.exit(0)
 # --- Plot: both figures side-by-side using GridSpec ---
 fig = plt.figure(figsize=(12,6))
