@@ -12,7 +12,7 @@ from pathlib import Path
 from profiles import Profile
 from constants import Physics
 from compute import simulate_flight, find_optimal_angle
-from plot import plot_trajectory
+from plot import plot_trajectory, plot_trajectories
 
 
 # --- Numerical parameters ---
@@ -23,7 +23,7 @@ def main():
     parser = argparse.ArgumentParser(description="Compute optimal arrow launch angle using named profiles from a config file.")
     parser.add_argument('target_x', type=float, nargs='?', default=None, help='Target horizontal distance in meters')
     parser.add_argument('target_y', type=float, nargs='?', default=None, help='Target height in meters')
-    parser.add_argument('profile', nargs='?', default='default', help='Named profile from the config file (default: "default")')
+    parser.add_argument('profile', nargs='*', default=['default'], help='One or more named profiles from the config file (default: ["default"])')
     parser.add_argument('--list-profiles', action='store_true', help='List available profiles from the config file and exit')
     parser.add_argument('--config-file', '-c', default=str(Path(__file__).with_name('arrows.json')), help='Path to JSON config with named profiles')
     parser.add_argument('--no-plot', action='store_true', help='Do not show plots')
@@ -55,26 +55,54 @@ def main():
             print(name)
         return
 
-    if args.profile not in configs:
-        print(f"Profile '{args.profile}' not found in config. Available profiles: {', '.join(sorted(configs.keys()))}")
-        sys.exit(1)
+    # allow multiple profiles
+    profile_names = args.profile if isinstance(args.profile, list) else [args.profile]
 
-    profile_obj = Profile.from_dict(args.profile, configs[args.profile])
+    results = []
+    trajectories = []
 
     phys = Physics()
 
-    # find optimal angle
-    best_theta, best_x_hit, best_y_hit = find_optimal_angle(profile_obj, target_x, target_y, dt=DT, phys=phys)
+    for pname in profile_names:
+        if pname not in configs:
+            print(f"Profile '{pname}' not found in config. Available profiles: {', '.join(sorted(configs.keys()))}")
+            sys.exit(1)
 
-    # final simulation recording trajectory
-    result = simulate_flight(best_theta, profile=profile_obj, target_x=target_x, dt=DT, phys=phys, record_trajectory=True)
-    x_end, y_end, t, v_end, angle_end, xs, ys, vxs, vys, ts = result
+        profile_obj = Profile.from_dict(pname, configs[pname])
 
-    # total velocity
-    v_total = np.sqrt(np.array(vxs)**2 + np.array(vys)**2)
-    target_height_rel = (np.tan(best_theta) * target_x - target_y)
+        # find optimal angle
+        best_theta, best_x_hit, best_y_hit = find_optimal_angle(profile_obj, target_x, target_y, dt=DT, phys=phys)
 
+        # final simulation recording trajectory
+        result = simulate_flight(best_theta, profile=profile_obj, target_x=target_x, dt=DT, phys=phys, record_trajectory=True)
+        x_end, y_end, t, v_end, angle_end, xs, ys, vxs, vys, ts = result
+
+        # total velocity
+        v_total = np.sqrt(np.array(vxs)**2 + np.array(vys)**2)
+        target_height_rel = (np.tan(best_theta) * target_x - target_y)
+
+        impact_angle_deg = np.degrees(np.arctan2(vys[-1], vxs[-1]))
+
+        results.append({
+            'profile': pname,
+            'target_x': f"{target_x:.2f}m",
+            'target_y': f"{target_y:.2f}m",
+            'holdover': f"{target_height_rel:.3f}",
+            'launch_angle': f"{np.degrees(best_theta):.3f}°",
+            'best_x_hit': f"{best_x_hit:.2f}m",
+            'best_y_hit': f"{best_y_hit:.2f}m",
+            'flight_time': f"{t:.2f} s",
+            'final_speed': f"{v_total[-1]:.2f} m/s",
+            'impact_angle': f"{impact_angle_deg:.2f}°"
+        })
+
+        # trajectories.append({'xs': xs, 'ys': ys, 'v_total': v_total, 'label': pname, 'target_height_rel': target_height_rel})
+        trajectories.append({'xs': xs, 'ys': ys, 'v_total': v_total, 'label': pname, 'target_height_rel': target_height_rel, 'color': tuple(np.random.rand(3,))})
+        
+
+    # prepare and print table
     headers = [
+        'Profile',
         "Target distance",
         "Target height",
         "Optimal holdover",
@@ -86,30 +114,29 @@ def main():
         "Impact angle"
     ]
 
-    values = [
-        f"{target_x:.2f}m",
-        f"{target_y:.2f}m",
-        f"{target_height_rel:.3f}",
-        f"{np.degrees(best_theta):.3f}°",
-        f"{best_x_hit:.2f}m",
-        f"{best_y_hit:.2f}m",
-        f"{t:.2f} s",
-        f"{v_total[-1]:.2f} m/s",
-        f"{np.degrees(np.arctan2(vys[-1], vxs[-1])):.2f}°"
-    ]
+    rows = []
+    for r in results:
+        rows.append([
+            r['profile'], r['target_x'], r['target_y'], r['holdover'], r['launch_angle'], r['best_x_hit'], r['best_y_hit'], r['flight_time'], r['final_speed'], r['impact_angle']
+        ])
 
-    widths = [max(len(h), len(v)) for h, v in zip(headers, values)]
+    # compute column widths
+    widths = []
+    for ci, h in enumerate(headers):
+        col_vals = [row[ci] for row in rows]
+        widths.append(max(len(h), max(len(v) for v in col_vals)))
+
     header_line = "  ".join(h.center(w) for h, w in zip(headers, widths))
-    value_line = "  ".join(v.rjust(w) for v, w in zip(values, widths))
-
     if not args.no_header:
         print(header_line)
-    print(value_line)
+
+    for row in rows:
+        print("  ".join(v.rjust(w) for v, w in zip(row, widths)))
 
     if args.no_plot:
         return
 
-    plot_trajectory(xs, ys, v_total, target_height_rel, target_x)
+    plot_trajectories(trajectories, target_x)
 
 
 if __name__ == "__main__":
