@@ -1,0 +1,21 @@
+[project]
+name = "arrowflight"
+version = "0.1.0"
+description = "Arrow flight simulator and analysis tools"
+requires-python = ">=3.8"
+dependencies = [
+  "numpy",
+  "matplotlib",
+  "plotly",
+  "scipy",
+  "readchar"
+]
+
+[project.scripts]
+arrowflight = "arrowflight.flight:main"
+calc_profile_results = "arrowflight.calc_profile_results:main"
+plot_profile_results = "arrowflight.plot_profile_results:main"
+
+[build-system]
+requires = ["setuptools>=61","wheel"]
+build-backend = "setuptools.build_meta"
