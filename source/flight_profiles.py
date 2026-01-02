@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict
 import math
-from constants import GRAINS_TO_KG, FPS_TO_MS
+from flight_constants import GRAINS_TO_KG, FPS_TO_MS
 
 
 @dataclass

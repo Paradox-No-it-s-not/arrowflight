@@ -1,6 +1,6 @@
 import numpy as np
-from profiles import Profile
-from constants import Physics
+from flight_profiles import Profile
+from flight_constants import Physics
 
 
 def simulate_flight(theta: float, profile: Profile, target_x: float, dt: float = 0.001,
