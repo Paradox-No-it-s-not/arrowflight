@@ -40,6 +40,7 @@ def main():
                 x += step
 
     start = time.perf_counter()
+    prev_len = 0
 
     with out_path.open("w", newline="", encoding="utf-8") as fout:
         writer = csv.writer(fout)
@@ -62,11 +63,17 @@ def main():
                 else:
                     console_first = False
 
-                print(f"Running command: {' '.join(command)}")
+                # write the running-command message in-place (same terminal line)
+                msg = f"Running command: {' '.join(command)}"
+                sys.stdout.write('\r' + msg + ' ' * max(0, prev_len - len(msg)))
+                sys.stdout.flush()
+                prev_len = len(msg)
                 result = subprocess.run(command, capture_output=True, text=True)
                 stdout = result.stdout or ""
                 # diagnostic: if subprocess produced no stdout, log returncode and stderr
                 if not stdout.strip():
+                    # move to a fresh line for diagnostics
+                    print()
                     print(f"Command produced no stdout (rc={result.returncode}). stderr:\n{result.stderr}")
                 # ignore empty lines, split Tabellenfelder an 2+ spaces
                 lines = [ln for ln in stdout.splitlines() if ln.strip()]
@@ -80,6 +87,8 @@ def main():
                         writer.writerow(cols)
 
     end=time.perf_counter()
+    # ensure we end on a fresh line before printing summary
+    print()
     print(f"Completed in {end - start:.2f} seconds.")
 
 if __name__ == "__main__":
