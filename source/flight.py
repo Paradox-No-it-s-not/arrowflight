@@ -9,10 +9,10 @@ import sys
 import argparse
 import json
 from pathlib import Path
-from profiles import Profile
-from constants import Physics
-from compute import simulate_flight, find_optimal_angle
-from plot import plot_trajectory, plot_trajectories
+from flight_profiles import Profile
+from flight_constants import Physics
+from flight_compute import simulate_flight, find_optimal_angle
+from flight_plot import plot_trajectory, plot_trajectories
 
 
 # --- Numerical parameters ---
@@ -85,15 +85,15 @@ def main():
 
         results.append({
             'profile': pname,
-            'target_x': f"{target_x:.2f}m",
-            'target_y': f"{target_y:.2f}m",
+            'target_x': f"{target_x:.2f}",
+            'target_y': f"{target_y:.2f}",
             'holdover': f"{target_height_rel:.3f}",
-            'launch_angle': f"{np.degrees(best_theta):.3f}°",
-            'best_x_hit': f"{best_x_hit:.2f}m",
-            'best_y_hit': f"{best_y_hit:.2f}m",
-            'flight_time': f"{t:.2f} s",
-            'final_speed': f"{v_total[-1]:.2f} m/s",
-            'impact_angle': f"{impact_angle_deg:.2f}°"
+            'launch_angle': f"{np.degrees(best_theta):.3f}",
+            'best_x_hit': f"{best_x_hit:.2f}",
+            'best_y_hit': f"{best_y_hit:.2f}",
+            'flight_time': f"{t:.2f}",
+            'final_speed': f"{v_total[-1]:.2f}",
+            'impact_angle': f"{impact_angle_deg:.2f}"
         })
 
         # trajectories.append({'xs': xs, 'ys': ys, 'v_total': v_total, 'label': pname, 'target_height_rel': target_height_rel})
@@ -103,15 +103,15 @@ def main():
     # prepare and print table
     headers = [
         'Profile',
-        "Target distance",
-        "Target height",
+        "Target distance [m]",
+        "Target height [m]",
         "Optimal holdover",
-        "Optimal launch angle",
-        "best_x_hit",
-        "best_y_hit",
-        "Flight time",
-        "Final speed",
-        "Impact angle"
+        "Optimal launch angle [°]",
+        "best_x_hit [m]",
+        "best_y_hit [m]",
+        "Flight time [s]",
+        "Final speed [m/s]",
+        "Impact angle [°]"
     ]
 
     rows = []
