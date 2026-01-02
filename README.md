@@ -112,4 +112,33 @@ Key implementation notes:
 
 If you'd like, I can also add a short `CONTRIBUTING.md` with development steps and tests.
 
+## macOS notes
+
+The package and console scripts work on macOS when installed into a Python environment (virtualenv or system). Recommended steps:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install --upgrade pip
+python3 -m pip install -r requirements.txt
+python3 -m pip install -e .
+```
+
+After installation the `arrowflight` command will be available in the active environment's `bin/` directory. Verify with:
+
+```bash
+which arrowflight
+```
+
+You can also run the module without installing:
+
+```bash
+python3 -m arrowflight.flight 60 5 default --no-plot
+```
+
+Notes about plotting and interactivity on macOS:
+- Use `--no-plot` in headless or CI environments to avoid GUI issues.
+- Matplotlib backends and Plotly may open GUI windows or browser tabs depending on your environment; Terminal and iTerm2 work well for the `readchar` keypress helper.
+
+
 

@@ -1,5 +1,7 @@
 *.cmd
 Arrowflight.code-workspace
+default_results.csv
 **.__pycache__/
 **.pyc
 data/**
+arrowflight.egg-info/
