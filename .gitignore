@@ -1,7 +1,9 @@
 *.cmd
 Arrowflight.code-workspace
-default_results.csv
+*.csv
+!results.csv
 **.__pycache__/
 **.pyc
 data/**
 arrowflight.egg-info/
+.venv_scan/

@@ -1,9 +1,9 @@
-import matplotlib.pyplot as plt
+import numpy as np  # Third-party: numpy (BSD-3-Clause)
+import matplotlib.pyplot as plt  # Third-party: matplotlib (PSF/BSD-like)
+import readchar  # Third-party: readchar (MIT)
 from matplotlib.patches import Circle
 from matplotlib.gridspec import GridSpec
 import threading
-import readchar
-import numpy as np
 import random
 
 

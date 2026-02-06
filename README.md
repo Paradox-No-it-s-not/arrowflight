@@ -83,7 +83,10 @@ arrowflight 50 0 default
 ```powershell
 arrowflight 30 1.5 light --no-plot
 ```
-
+- Run for a 30 m target -2m height using the `heavy` and `default` profiles in order to compare the flights
+```powershell
+arrowflight 30 -2.0 heavy default 
+```
 - Run the batch CSV generator (example range):
 ```powershell
 calc_profile_results default --x_values 10 10 30 --y_values -1 1 1

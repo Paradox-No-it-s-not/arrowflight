@@ -3,8 +3,9 @@
 import csv
 import sys
 import argparse
-import numpy as np
-import plotly.graph_objects as go
+import numpy as np  # Third-party: numpy (BSD-3-Clause)
+import scipy  # Third-party: scipy (BSD-3-Clause)
+import plotly  # Third-party: plotly (MIT)
 from pathlib import Path
 from scipy.interpolate import griddata
 from collections import defaultdict
