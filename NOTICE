@@ -1,0 +1,19 @@
+Arrowflight
+Copyright 2026 Dimitrios Malamidis (develop@malamidis.de)
+
+This product is licensed under the Apache License, Version 2.0.
+See the LICENSE file for full license text.
+
+This product includes third-party software. A detailed list of third-party
+packages and their licenses is available in `third_party_licenses.md` and
+`THIRD_PARTY_NOTICES.md`.
+
+Third-party highlights:
+- numpy — https://numpy.org
+- matplotlib — https://matplotlib.org
+- scipy — https://scipy.org
+- plotly — https://plotly.com/python/
+- readchar — https://pypi.org/project/readchar
+
+If you redistribute this work, you must include this NOTICE file and
+all files required by the Apache License, Version 2.0.
