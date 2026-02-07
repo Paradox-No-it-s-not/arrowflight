@@ -6,6 +6,7 @@ import argparse
 import numpy as np  # Third-party: numpy (BSD-3-Clause)
 import scipy  # Third-party: scipy (BSD-3-Clause)
 import plotly  # Third-party: plotly (MIT)
+import plotly.graph_objects as go
 from pathlib import Path
 from scipy.interpolate import griddata
 from collections import defaultdict

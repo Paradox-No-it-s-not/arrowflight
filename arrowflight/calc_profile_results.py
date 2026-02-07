@@ -6,6 +6,10 @@ import csv
 import re
 from pathlib import Path
 import time
+import concurrent.futures
+import threading
+import itertools
+import os
 
 
 def main():
@@ -20,8 +24,8 @@ def main():
     x_start, x_step, x_end = args.x_values
     y_start, y_step, y_end = args.y_values
 
-    console_first = True           # steuert, ob --no-header an den Aufruf angehängt wird
-    csv_header_written = False     # steuert, ob CSV-Header bereits in die Datei geschrieben wurde
+    csv_header_written = [False]     # steuert, ob CSV-Header bereits in die Datei geschrieben wurde (mutable container)
+    header_row = [None]              # store the header row to skip duplicates
     out_path = Path(profile_name + "_results.csv")
 
     def frange(start: float, stop: float, step: float):
@@ -42,49 +46,61 @@ def main():
     start = time.perf_counter()
     prev_len = 0
 
-    with out_path.open("w", newline="", encoding="utf-8") as fout:
-        writer = csv.writer(fout)
-        for x in frange(x_start, x_end + 1, x_step):
-            for y in frange(y_start, y_end, y_step):
-                # Erstelle die Befehlszeilenargumenteliste
-                command = [
-                    sys.executable,
-                    "-m",
-                    "arrowflight.flight",
-                    str(x),
-                    str(y),
-                    profile_name,
-                    "--no-plot",
-                ]
+    combos = list(itertools.product(list(frange(x_start, x_end + 1, x_step)), list(frange(y_start, y_end, y_step))))
 
-                # nur ab dem zweiten Konsolenaufruf --no-header anhängen
-                if not console_first:
-                    command.append("--no-header")
-                else:
-                    console_first = False
+    file_lock = threading.Lock()
+    print_lock = threading.Lock()
 
-                # write the running-command message in-place (same terminal line)
-                msg = f"Running command: {' '.join(command)}"
-                sys.stdout.write('\r' + msg + ' ' * max(0, prev_len - len(msg)))
-                sys.stdout.flush()
-                prev_len = len(msg)
-                result = subprocess.run(command, capture_output=True, text=True)
-                stdout = result.stdout or ""
-                # diagnostic: if subprocess produced no stdout, log returncode and stderr
-                if not stdout.strip():
-                    # move to a fresh line for diagnostics
-                    print()
-                    print(f"Command produced no stdout (rc={result.returncode}). stderr:\n{result.stderr}")
-                # ignore empty lines, split Tabellenfelder an 2+ spaces
-                lines = [ln for ln in stdout.splitlines() if ln.strip()]
-                for i, ln in enumerate(lines):
-                    cols = re.split(r"\s{2,}", ln.strip())
-                    # erste gefundene nicht-leere Zeile beim ersten Durchlauf ist der Header
-                    if not csv_header_written:
+    def run_and_write(x, y):
+        command = [
+            sys.executable,
+            "-m",
+            "arrowflight.flight",
+            str(x),
+            str(y),
+            profile_name,
+            "--no-plot",
+        ]
+
+        msg = f"Running command: {' '.join(command)}"
+        with print_lock:
+            sys.stdout.write('\r' + msg + ' ' * max(0, prev_len - len(msg)))
+            sys.stdout.flush()
+
+        result = subprocess.run(command, capture_output=True, text=True)
+        stdout = result.stdout or ""
+        if not stdout.strip():
+            with print_lock:
+                print()
+                print(f"Command produced no stdout (rc={result.returncode}). stderr:\n{result.stderr}")
+
+        lines = [ln for ln in stdout.splitlines() if ln.strip()]
+        rows = [re.split(r"\s{2,}", ln.strip()) for ln in lines]
+
+        with file_lock:
+            with out_path.open("a", newline="", encoding="utf-8") as fout:
+                writer = csv.writer(fout)
+                for i, cols in enumerate(rows):
+                    # write header once and remember it; skip any subsequent rows that match the header
+                    if not csv_header_written[0]:
                         writer.writerow(cols)
-                        csv_header_written = True
+                        csv_header_written[0] = True
+                        header_row[0] = tuple(cols)
                     else:
+                        if header_row[0] is not None and tuple(cols) == header_row[0]:
+                            continue  # skip duplicate header row
                         writer.writerow(cols)
+
+    # Ensure file is created/truncated before concurrent appends
+    with out_path.open("w", newline="", encoding="utf-8") as fout:
+        pass
+
+    max_workers = min(32, (os.cpu_count() or 1) * 5, len(combos) or 1)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as ex:
+        futures = [ex.submit(run_and_write, x, y) for x, y in combos]
+        # wait for all to complete, propagate exceptions
+        for f in concurrent.futures.as_completed(futures):
+            f.result()
 
     end=time.perf_counter()
     # ensure we end on a fresh line before printing summary
