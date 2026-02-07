@@ -8,35 +8,34 @@ Small simulator that computes an optimal launch angle for an arrow and visualize
 - Prints results in a compact table
 - Optionally shows plots: trajectory, speed profile, and a target-circle visualization
 
-## Files
-- [arrowflight/flight.py](arrowflight/flight.py) — **Main CLI**: entry point; parses arguments, loads a named profile from the JSON config, runs the simulation/optimizer and optionally plots results.
-- [arrowflight/flight_compute.py](arrowflight/flight_compute.py) — **Computation**: physics and numerical routines (flight simulator and angle optimizer).
-- [arrowflight/flight_plot.py](arrowflight/flight_plot.py) — **Plot helpers**: functions for drawing single or multiple trajectories and related charts using Matplotlib.
-- [arrowflight/flight_profiles.py](arrowflight/flight_profiles.py) — **Profile dataclass**: profile factory and conversion helpers (mass, area, velocity conversions).
-- [arrowflight/flight_constants.py](arrowflight/flight_constants.py) — **Constants**: physical constants and unit conversion factors used across modules.
-- [arrowflight/arrows.json](arrowflight/arrows.json) — **Config**: sample JSON with multiple named arrow profiles (mass, diameter, drag coeff, initial speed).
-- [arrowflight/calc_profile_results.py](arrowflight/calc_profile_results.py) — **Batch runner**: convenience script to call the package entrypoint over ranges of `x`/`y` and write CSV results.
-- [arrowflight/plot_profile_results.py](arrowflight/plot_profile_results.py) — **3D plotting / analysis**: read CSV output and create interactive plots or summaries.
+## First steps
+- Execute the steps listed in [Installation](##Installation)
+- Execute in a commandline:
+```powershell
+arrowflight 50 0 default
+```
+This should print the calculated data in the console and show up a window with some plots of the arrow's flight to the target.
 
-Run the tools via the package entrypoints or installed console scripts (see Installation).
 
-## Requirements
-- Python 3.8+
-- `numpy`, `matplotlib`, `plotly`, `scipy`, `readchar`
+## Installation
 
-Install dependencies (recommended inside a virtualenv) and install the package editable:
-
+### Steps to install
 ```powershell
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 python -m pip install -e .
 ```
+### Requirements
+- Python 3.8+
+- `numpy`, `matplotlib`, `plotly`, `scipy`, `readchar`
 
 Installing editable (`-e`) registers console scripts named `arrowflight`, `calc_profile_results` and `plot_profile_results` which are thin wrappers around the package modules.
 
- ## Usage
 
-Run the main simulator (prints table, optionally plots):
+
+## Usage
+As a first step open the file arrows.json and insert a new named setup for your bow/arrow, or place your data into the existing default setup.
+Test the main simulator (prints table, optionally plots):
 
 ```powershell
 arrowflight <target_x[m]> <target_y[m]> [profile] [--config-file PATH] [--no-plot] [--no-header]
@@ -57,6 +56,19 @@ python -m arrowflight.flight <target_x[m]> <target_y[m]> [profile] [--config-fil
 Notes:
 - Distances are in meters; internal velocities are in m/s (script converts fps to m/s using the profile value).
 - When plots are enabled the program opens a non-blocking Matplotlib window and waits for a keypress in the terminal before exiting.
+
+## Files
+- [arrowflight/flight.py](arrowflight/flight.py) — **Main CLI**: entry point; parses arguments, loads a named profile from the JSON config, runs the simulation/optimizer and optionally plots results.
+- [arrowflight/flight_compute.py](arrowflight/flight_compute.py) — **Computation**: physics and numerical routines (flight simulator and angle optimizer).
+- [arrowflight/flight_plot.py](arrowflight/flight_plot.py) — **Plot helpers**: functions for drawing single or multiple trajectories and related charts using Matplotlib.
+- [arrowflight/flight_profiles.py](arrowflight/flight_profiles.py) — **Profile dataclass**: profile factory and conversion helpers (mass, area, velocity conversions).
+- [arrowflight/flight_constants.py](arrowflight/flight_constants.py) — **Constants**: physical constants and unit conversion factors used across modules.
+- [arrowflight/arrows.json](arrowflight/arrows.json) — **Config**: sample JSON with multiple named arrow profiles (mass, diameter, drag coeff, initial speed).
+- [arrowflight/calc_profile_results.py](arrowflight/calc_profile_results.py) — **Batch runner**: convenience script to call the package entrypoint over ranges of `x`/`y` and write CSV results.
+- [arrowflight/plot_profile_results.py](arrowflight/plot_profile_results.py) — **3D plotting / analysis**: read CSV output and create interactive plots or summaries.
+
+Run the tools via the package entrypoints or installed console scripts (see Installation).
+
 
 ## Configuration
 
@@ -105,15 +117,11 @@ If `NO_HEADER` is used, only the values row is printed. If `NO_PLOT` is used the
 
 ## Notes
 
-Internal comments and docstrings were translated from German to English during refactoring.
-
 Key implementation notes:
 
 - The code is packaged as `arrowflight` and provides three entry points: `arrowflight`, `calc_profile_results`, and `plot_profile_results`.
 - Plotting uses Matplotlib and Plotly. Plotly surfaces open in a browser or inline depending on your environment.
 - The `readchar` keypress helper works in real terminals; some IDE consoles and remote environments may not support the same interactive behavior.
-
-If you'd like, I can also add a short `CONTRIBUTING.md` with development steps and tests.
 
 ## macOS notes
 
@@ -127,13 +135,13 @@ python3 -m pip install -r requirements.txt
 python3 -m pip install -e .
 ```
 
-After installation the `arrowflight` command will be available in the active environment's `bin/` directory. Verify with:
+After installation the commands `arrowflight`, `calc_profile_results` and  `plot_profile_results` will be available in the active environment's `bin/` directory. Verify i.e. with:
 
 ```bash
 which arrowflight
 ```
 
-You can also run the module without installing:
+You can also run the module without installing, i.e.. :
 
 ```bash
 python3 -m arrowflight.flight 60 5 default --no-plot
