@@ -8,6 +8,5 @@ data/**
 arrowflight.egg-info/
 .venv_scan/
 .github
-arrowflight/_version.py
 build/
 dist/
