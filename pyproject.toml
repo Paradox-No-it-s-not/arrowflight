@@ -1,6 +1,6 @@
 [project]
 name = "arrowflight"
-version = "1.0.0"
+dynamic = ["version"]
 description = "Arrow flight simulator and analysis tools"
 requires-python = ">=3.8"
 dependencies = [
@@ -17,5 +17,10 @@ calc_profile_results = "arrowflight.calc_profile_results:main"
 plot_profile_results = "arrowflight.plot_profile_results:main"
 
 [build-system]
-requires = ["setuptools>=61","wheel"]
+requires = ["setuptools>=61","wheel","setuptools_scm"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+write_to = "arrowflight/_version.py"
+write_to_template = "version = \"{version}\\n\""
+
