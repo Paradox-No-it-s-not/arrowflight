@@ -17,6 +17,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          fetch-tags: true
+          ref: ${{ github.ref }}
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -38,9 +40,11 @@ jobs:
         run: python -c "import arrowflight; print('arrowflight import OK')"
 
       - name: Build distributions
+        if: ${{ matrix.python-version == '3.11' }}
         run: python -m build --sdist --wheel
 
       - name: Upload dist artifact
+        if: ${{ matrix.python-version == '3.11' }}
         uses: actions/upload-artifact@v4
         with:
           name: dist
