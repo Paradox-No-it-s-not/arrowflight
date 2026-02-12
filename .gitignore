@@ -7,6 +7,5 @@ Arrowflight.code-workspace
 data/**
 arrowflight.egg-info/
 .venv_scan/
-.github
 build/
 dist/
